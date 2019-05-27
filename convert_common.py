@@ -3,9 +3,14 @@ import xml.etree.ElementTree as ET
 import PIL.Image
 import os
 import io
+import warnings
 
 from object_detection.utils import dataset_util
 from object_detection.utils import label_map_util
+
+
+class UnknownLabelWarning(Warning):
+    pass
 
 def ls_data_folder(data_folder):
     folder_names = os.listdir(data_folder)
@@ -64,6 +69,9 @@ def create_tf_example(full_path_xml, full_path_images, class_dict):
             ymaxs.append(float(xml_bndbox.find('ymax').text) / height)
             classes_text.append(xml_object_class.encode('utf-8'))
             classes.append(class_dict[xml_object_class])
+        else:
+            warning_message = 'Label \'{}\' is not in the label map. Objects with this label will not be included into the resulting tfrecord.'.format(xml_object_class)
+            warnings.warn(warning_message, UnknownLabelWarning)
     
 
     tf_example = tf.train.Example(features=tf.train.Features(feature={
